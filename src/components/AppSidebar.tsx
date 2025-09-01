@@ -1,4 +1,4 @@
-import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings } from "lucide-react";
+import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings, BookOpen } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -16,8 +16,9 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
   { title: "Visão", url: "/vision", icon: Eye },
   { title: "Objetivos", url: "/objectives", icon: Target },
-  { title: "Execução", url: "/execution", icon: CheckCircle },
   { title: "Planejamento", url: "/planning", icon: Calendar },
+  { title: "Execução", url: "/execution", icon: CheckCircle },
+  { title: "Revisões", url: "/reviews", icon: BookOpen },
 ];
 
 export function AppSidebar() {

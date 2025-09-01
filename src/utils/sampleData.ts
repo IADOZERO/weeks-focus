@@ -1,4 +1,4 @@
-import { Vision, Cycle, Objective, Action } from "@/types";
+import { Vision, Cycle, Objective, Action, WeeklyReview } from "@/types";
 
 export const createSampleVision = (): Vision => ({
   id: "sample-vision-1",
@@ -101,6 +101,29 @@ export const createSampleCycle = (visionId: string): Cycle => {
     }
   ];
 
+  const weeklyReviews: WeeklyReview[] = [
+    {
+      id: "review-1",
+      weekNumber: 1,
+      cycleId: "sample-cycle-1",
+      completionRate: 80,
+      obstacles: ["Falta de tempo", "Dificuldade com nova API"],
+      adjustments: ["Acordar 1h mais cedo", "Estudar documentação"],
+      learnings: ["Importância do planejamento", "Valor da consistência"],
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: "review-2", 
+      weekNumber: 2,
+      cycleId: "sample-cycle-1",
+      completionRate: 90,
+      obstacles: ["Reuniões extras"],
+      adjustments: ["Bloquear tempo no calendário"],
+      learnings: ["Proteção do tempo é essencial"],
+      createdAt: new Date()
+    }
+  ];
+
   return {
     id: "sample-cycle-1",
     name: "Q1 2025 - Foco em React",
@@ -108,7 +131,7 @@ export const createSampleCycle = (visionId: string): Cycle => {
     endDate,
     status: "active",
     objectives,
-    weeklyReviews: []
+    weeklyReviews
   };
 };
 
