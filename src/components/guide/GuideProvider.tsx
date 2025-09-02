@@ -16,8 +16,6 @@ export interface GuideProgress {
 }
 
 interface GuideContextType {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
   progress: GuideProgress;
   setProgress: (progress: GuideProgress) => void;
   steps: GuideStep[];
@@ -42,7 +40,6 @@ const GUIDE_STEPS: GuideStep[] = [
 const STORAGE_KEY = 'guide-progress';
 
 export function GuideProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [steps, setSteps] = useState<GuideStep[]>(GUIDE_STEPS);
   const [progress, setProgress] = useState<GuideProgress>({
     currentStep: 0,
@@ -142,8 +139,6 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value: GuideContextType = {
-    isOpen,
-    setIsOpen,
     progress,
     setProgress,
     steps,

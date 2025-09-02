@@ -29,7 +29,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { setIsOpen: openGuide, progress } = useGuide();
+  const { progress } = useGuide();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -65,16 +65,18 @@ export function AppSidebar() {
               
               {/* Guide Access */}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => openGuide(true)} className="hover:bg-sidebar-accent/50 text-sidebar-foreground">
-                  <HelpCircle className="h-4 w-4 shrink-0" />
-                  {!collapsed && (
-                    <div className="flex items-center justify-between w-full">
-                      <span>Guia Interativo</span>
-                      {!progress.isComplete && (
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                      )}
-                    </div>
-                  )}
+                <SidebarMenuButton asChild>
+                  <NavLink to="/guide" className={getNavCls}>
+                    <HelpCircle className="h-4 w-4 shrink-0" />
+                    {!collapsed && (
+                      <div className="flex items-center justify-between w-full">
+                        <span>Guia Interativo</span>
+                        {!progress.isComplete && (
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                        )}
+                      </div>
+                    )}
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

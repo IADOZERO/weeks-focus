@@ -13,7 +13,7 @@ export function Dashboard() {
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [overallProgress, setOverallProgress] = useState(0);
   const navigate = useNavigate();
-  const { setIsOpen: openGuide, progress } = useGuide();
+  const { progress } = useGuide();
 
   useEffect(() => {
     if (currentCycle) {
@@ -84,7 +84,7 @@ export function Dashboard() {
                   Aprenda em 30 minutos como aplicar o 12 Week Year com nosso guia interativo
                 </p>
                 <Button 
-                  onClick={() => openGuide(true)}
+                  onClick={() => navigate('/guide')}
                   size="sm"
                   className="gap-2"
                 >

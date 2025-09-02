@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GuideProvider } from "@/components/guide/GuideProvider";
-import { GuideModal } from "@/components/guide/GuideModal";
 import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import VisionPage from "./pages/VisionPage";
@@ -14,6 +13,7 @@ import ObjectivesPage from "./pages/ObjectivesPage";
 import ExecutionPage from "./pages/ExecutionPage";
 import PlanningPage from "./pages/PlanningPage";
 import ReviewsPage from "./pages/ReviewsPage";
+import GuideInteractivePage from "./pages/GuideInteractivePage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -26,7 +26,6 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <GuideModal />
           <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
@@ -70,6 +69,11 @@ const App = () => (
                 <Layout>
                   <ReviewsPage />
                 </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/guide" element={
+              <ProtectedRoute>
+                <GuideInteractivePage />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
