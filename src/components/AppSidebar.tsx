@@ -1,5 +1,6 @@
-import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings, BookOpen } from "lucide-react";
+import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings, BookOpen, LogOut, User } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -9,8 +10,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
@@ -24,6 +27,7 @@ const menuItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -60,6 +64,38 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              {!collapsed && (
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-medium truncate">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {user?.email}
+                  </span>
+                </div>
+              )}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start h-auto p-2"
+                onClick={signOut}
+              >
+                <LogOut className="h-4 w-4" />
+                {!collapsed && <span>Sair</span>}
+              </Button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

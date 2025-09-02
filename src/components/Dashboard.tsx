@@ -3,44 +3,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Target, Calendar, TrendingUp, CheckCircle } from "lucide-react";
-import { useCycles, useCurrentCycle } from "@/hooks/useLocalStorage";
-import { Cycle } from "@/types";
+import { useCurrentCycle } from "@/hooks/useSupabaseData";
 import { useState, useEffect } from "react";
-import { initializeSampleData } from "@/utils/sampleData";
 
 export function Dashboard() {
-  const [cycles] = useCycles();
-  const [currentCycleId] = useCurrentCycle();
-  const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
+  const { currentCycle, loading } = useCurrentCycle();
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [overallProgress, setOverallProgress] = useState(0);
 
   useEffect(() => {
-    // Initialize sample data on first load
-    initializeSampleData();
-  }, []);
+    if (currentCycle) {
+      // Calculate current week progress
+      const allActions = currentCycle.objectives.flatMap(obj => obj.actions);
+      const currentWeek = getCurrentWeek(currentCycle.startDate);
+      const weekActions = allActions.filter(action => action.weekNumber === currentWeek);
+      const completedWeekActions = weekActions.filter(action => action.completed);
+      const weekScore = weekActions.length > 0 ? (completedWeekActions.length / weekActions.length) * 100 : 0;
+      setWeeklyScore(weekScore);
 
-  useEffect(() => {
-    if (currentCycleId && cycles.length > 0) {
-      const cycle = cycles.find((c: Cycle) => c.id === currentCycleId);
-      setCurrentCycle(cycle || null);
-      
-      if (cycle) {
-        // Calculate current week progress
-        const allActions = cycle.objectives.flatMap(obj => obj.actions);
-        const currentWeek = getCurrentWeek(cycle.startDate);
-        const weekActions = allActions.filter(action => action.weekNumber === currentWeek);
-        const completedWeekActions = weekActions.filter(action => action.completed);
-        const weekScore = weekActions.length > 0 ? (completedWeekActions.length / weekActions.length) * 100 : 0;
-        setWeeklyScore(weekScore);
-
-        // Calculate overall cycle progress
-        const completedActions = allActions.filter(action => action.completed);
-        const overallScore = allActions.length > 0 ? (completedActions.length / allActions.length) * 100 : 0;
-        setOverallProgress(overallScore);
-      }
+      // Calculate overall cycle progress
+      const completedActions = allActions.filter(action => action.completed);
+      const overallScore = allActions.length > 0 ? (completedActions.length / allActions.length) * 100 : 0;
+      setOverallProgress(overallScore);
     }
-  }, [currentCycleId, cycles]);
+  }, [currentCycle]);
 
   const getCurrentWeek = (startDate: Date): number => {
     const now = new Date();
@@ -57,6 +43,26 @@ export function Dashboard() {
     const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
     return Math.max(diffWeeks, 0);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        </div>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-8 text-center">
+            <div className="animate-pulse">
+              <div className="h-12 w-12 bg-muted rounded-full mx-auto mb-4"></div>
+              <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-2"></div>
+              <div className="h-3 bg-muted rounded w-1/2 mx-auto"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!currentCycle) {
     return (
