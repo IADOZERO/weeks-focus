@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,29 @@ interface ObjectiveFormProps {
 }
 
 export function ObjectiveForm({ open, onOpenChange, onSubmit, visions, objective }: ObjectiveFormProps) {
-  const [title, setTitle] = useState(objective?.title || "");
-  const [description, setDescription] = useState(objective?.description || "");
-  const [measurable, setMeasurable] = useState(objective?.measurable || "");
-  const [deadline, setDeadline] = useState<Date | undefined>(objective?.deadline);
-  const [visionId, setVisionId] = useState(objective?.visionId || "");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [measurable, setMeasurable] = useState("");
+  const [deadline, setDeadline] = useState<Date | undefined>();
+  const [visionId, setVisionId] = useState("");
+
+  // Sync form state with objective prop
+  useEffect(() => {
+    if (objective) {
+      setTitle(objective.title);
+      setDescription(objective.description);
+      setMeasurable(objective.measurable);
+      setDeadline(objective.deadline);
+      setVisionId(objective.visionId);
+    } else {
+      // Reset form when creating new objective
+      setTitle("");
+      setDescription("");
+      setMeasurable("");
+      setDeadline(undefined);
+      setVisionId("");
+    }
+  }, [objective]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +59,14 @@ export function ObjectiveForm({ open, onOpenChange, onSubmit, visions, objective
       completed: objective?.completed || false,
     });
 
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setMeasurable("");
-    setDeadline(undefined);
-    setVisionId("");
+    // Reset form only after successful submit
+    if (!objective) {
+      setTitle("");
+      setDescription("");
+      setMeasurable("");
+      setDeadline(undefined);
+      setVisionId("");
+    }
     onOpenChange(false);
   };
 
