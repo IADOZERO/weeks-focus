@@ -243,7 +243,34 @@ export const useCycles = () => {
     }
   };
 
-  return { cycles, loading, addCycle, refetch: fetchCycles };
+  const updateCycle = async (id: string, updates: Partial<Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>>) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('cycles')
+        .update({
+          name: updates.name,
+          start_date: updates.startDate?.toISOString().split('T')[0],
+          end_date: updates.endDate?.toISOString().split('T')[0],
+          status: updates.status,
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setCycles(prev => prev.map(c =>
+        c.id === id ? { ...c, ...updates } : c
+      ));
+      toast.success('Ciclo atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating cycle:', error);
+      toast.error('Erro ao atualizar ciclo');
+    }
+  };
+
+  return { cycles, loading, addCycle, updateCycle, refetch: fetchCycles };
 };
 
 // Current cycle hook

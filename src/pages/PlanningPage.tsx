@@ -13,19 +13,25 @@ import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PlanningPage() {
-  const { cycles, addCycle } = useCycles();
+  const { cycles, addCycle, updateCycle } = useCycles();
   const { currentCycle, currentCycleId } = useCurrentCycle();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
   const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
   const [editingAction, setEditingAction] = useState<Action | undefined>();
+  const [editingCycle, setEditingCycle] = useState<Cycle | undefined>();
   const { toast } = useToast();
 
   const currentWeekNumber = getCurrentWeekNumber(currentCycle);
 
   const handleCreateCycle = async (cycleData: Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>) => {
     await addCycle(cycleData);
+  };
+
+  const handleUpdateCycle = async (cycleData: Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>) => {
+    if (!editingCycle) return;
+    await updateCycle(editingCycle.id, cycleData);
   };
 
   const handleCreateAction = async (actionData: Omit<Action, 'id' | 'completed' | 'completedAt'>) => {
@@ -133,6 +139,16 @@ export default function PlanningPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setEditingCycle(currentCycle);
+              setShowCycleForm(true);
+            }}
+            className="gap-2"
+          >
+            Editar Ciclo
+          </Button>
           <Button 
             onClick={() => {
               if (currentCycle.objectives.length === 0) {
@@ -344,8 +360,14 @@ export default function PlanningPage() {
 
       <CycleForm
         open={showCycleForm}
-        onOpenChange={setShowCycleForm}
-        onSubmit={handleCreateCycle}
+        onOpenChange={(open) => {
+          setShowCycleForm(open);
+          if (!open) {
+            setEditingCycle(undefined);
+          }
+        }}
+        onSubmit={editingCycle ? handleUpdateCycle : handleCreateCycle}
+        cycle={editingCycle}
       />
     </div>
   );
