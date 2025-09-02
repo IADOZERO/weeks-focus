@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Calendar, TrendingUp, BookOpen, AlertTriangle } from "lucide-react";
 import { WeeklyReviewForm } from "@/components/WeeklyReviewForm";
-import { useCycles, useCurrentCycle } from "@/hooks/useLocalStorage";
+import { useCurrentCycle, useCycles, useWeeklyReviews } from "@/hooks/useSupabaseData";
 import { WeeklyReview } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
@@ -13,14 +13,11 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function ReviewsPage() {
-  const [cycles, setCycles] = useCycles();
-  const [currentCycleId] = useCurrentCycle();
+  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { reviews, addReview } = useWeeklyReviews(currentCycleId || undefined);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const { toast } = useToast();
-
-  const currentCycle = cycles.find(cycle => cycle.id === currentCycleId);
-  const reviews = currentCycle?.weeklyReviews || [];
 
   const getCurrentWeekNumber = (): number => {
     if (!currentCycle) return 1;
@@ -43,7 +40,7 @@ export default function ReviewsPage() {
     return (completedActions / weekActions.length) * 100;
   };
 
-  const handleCreateReview = (reviewData: Omit<WeeklyReview, 'id' | 'createdAt'>) => {
+  const handleCreateReview = async (reviewData: Omit<WeeklyReview, 'id' | 'createdAt'>) => {
     if (!currentCycle) return;
 
     const existingReview = reviews.find(r => r.weekNumber === reviewData.weekNumber);
@@ -56,23 +53,7 @@ export default function ReviewsPage() {
       return;
     }
 
-    const newReview: WeeklyReview = {
-      ...reviewData,
-      id: uuidv4(),
-      createdAt: new Date(),
-    };
-
-    const updatedCycles = cycles.map(cycle =>
-      cycle.id === currentCycleId
-        ? { ...cycle, weeklyReviews: [...cycle.weeklyReviews, newReview] }
-        : cycle
-    );
-
-    setCycles(updatedCycles);
-    toast({
-      title: "Sucesso",
-      description: "Revisão semanal criada com sucesso!",
-    });
+    await addReview(reviewData);
   };
 
   const currentWeek = getCurrentWeekNumber();
@@ -112,13 +93,13 @@ export default function ReviewsPage() {
             Acompanhe seu progresso com revisões semanais
           </p>
         </div>
-        <Button 
-          onClick={() => {
-            setSelectedWeek(currentWeek);
-            setShowReviewForm(true);
-          }}
-          className="gap-2"
-        >
+          <Button 
+            onClick={() => {
+              setSelectedWeek(currentWeek);
+              setShowReviewForm(true);
+            }}
+            className="gap-2"
+          >
           <Plus className="h-4 w-4" />
           Nova Revisão
         </Button>

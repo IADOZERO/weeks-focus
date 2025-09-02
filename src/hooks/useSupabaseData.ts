@@ -264,13 +264,399 @@ export const useCurrentCycle = () => {
   return { currentCycle, currentCycleId, setCurrentCycleId, loading };
 };
 
-// Additional hooks for objectives, actions, reviews can be added here
-export const useObjectives = () => {
+// Objectives hooks
+export const useObjectives = (cycleId?: string) => {
   const { user } = useAuth();
   const [objectives, setObjectives] = useState<Objective[]>([]);
-  
-  // Implementation for objectives CRUD operations
-  // Similar pattern as above
-  
-  return { objectives, setObjectives };
+  const [loading, setLoading] = useState(true);
+
+  const fetchObjectives = async () => {
+    if (!user || !cycleId) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('objectives')
+        .select(`
+          *,
+          actions (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('cycle_id', cycleId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const mappedObjectives: Objective[] = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        measurable: item.measurable,
+        deadline: new Date(item.deadline),
+        visionId: item.vision_id,
+        completed: item.completed,
+        completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
+        actions: item.actions?.map((action: any) => ({
+          id: action.id,
+          title: action.title,
+          description: action.description,
+          weekNumber: action.week_number,
+          priority: action.priority,
+          estimatedTime: action.estimated_time,
+          completed: action.completed,
+          completedAt: action.completed_at ? new Date(action.completed_at) : undefined,
+          notes: action.notes
+        })) || []
+      }));
+      
+      setObjectives(mappedObjectives);
+    } catch (error) {
+      console.error('Error fetching objectives:', error);
+      toast.error('Erro ao carregar objetivos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchObjectives();
+  }, [user, cycleId]);
+
+  const addObjective = async (objective: Omit<Objective, 'id' | 'actions' | 'completedAt'>) => {
+    if (!user || !cycleId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('objectives')
+        .insert([{
+          user_id: user.id,
+          cycle_id: cycleId,
+          title: objective.title,
+          description: objective.description,
+          measurable: objective.measurable,
+          deadline: objective.deadline.toISOString().split('T')[0],
+          vision_id: objective.visionId,
+          completed: objective.completed || false
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      const newObjective: Objective = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        measurable: data.measurable,
+        deadline: new Date(data.deadline),
+        visionId: data.vision_id,
+        completed: data.completed,
+        actions: []
+      };
+      
+      setObjectives(prev => [newObjective, ...prev]);
+      toast.success('Objetivo criado com sucesso!');
+      return newObjective;
+    } catch (error) {
+      console.error('Error adding objective:', error);
+      toast.error('Erro ao criar objetivo');
+    }
+  };
+
+  const updateObjective = async (id: string, updates: Partial<Objective>) => {
+    if (!user) return;
+    
+    try {
+      const updateData: any = {};
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) updateData.description = updates.description;
+      if (updates.measurable) updateData.measurable = updates.measurable;
+      if (updates.deadline) updateData.deadline = updates.deadline.toISOString().split('T')[0];
+      if (updates.visionId) updateData.vision_id = updates.visionId;
+      if (typeof updates.completed === 'boolean') {
+        updateData.completed = updates.completed;
+        updateData.completed_at = updates.completed ? new Date().toISOString() : null;
+      }
+
+      const { error } = await supabase
+        .from('objectives')
+        .update(updateData)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setObjectives(prev => prev.map(obj => 
+        obj.id === id ? { ...obj, ...updates } : obj
+      ));
+      toast.success('Objetivo atualizado!');
+    } catch (error) {
+      console.error('Error updating objective:', error);
+      toast.error('Erro ao atualizar objetivo');
+    }
+  };
+
+  const deleteObjective = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('objectives')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setObjectives(prev => prev.filter(obj => obj.id !== id));
+      toast.success('Objetivo removido!');
+    } catch (error) {
+      console.error('Error deleting objective:', error);
+      toast.error('Erro ao remover objetivo');
+    }
+  };
+
+  return { objectives, loading, addObjective, updateObjective, deleteObjective, refetch: fetchObjectives };
+};
+
+// Actions hooks
+export const useActions = (objectiveId?: string) => {
+  const { user } = useAuth();
+  const [actions, setActions] = useState<Action[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchActions = async () => {
+    if (!user || !objectiveId) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('actions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('objective_id', objectiveId)
+        .order('week_number', { ascending: true });
+
+      if (error) throw error;
+      
+      const mappedActions: Action[] = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || '',
+        weekNumber: item.week_number,
+        priority: item.priority,
+        estimatedTime: item.estimated_time,
+        completed: item.completed,
+        completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
+        notes: item.notes
+      }));
+      
+      setActions(mappedActions);
+    } catch (error) {
+      console.error('Error fetching actions:', error);
+      toast.error('Erro ao carregar ações');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActions();
+  }, [user, objectiveId]);
+
+  const addAction = async (action: Omit<Action, 'id' | 'completedAt'>) => {
+    if (!user || !objectiveId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('actions')
+        .insert([{
+          user_id: user.id,
+          objective_id: objectiveId,
+          title: action.title,
+          description: action.description,
+          week_number: action.weekNumber,
+          priority: action.priority,
+          estimated_time: action.estimatedTime,
+          completed: action.completed || false,
+          notes: action.notes
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      const newAction: Action = {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        weekNumber: data.week_number,
+        priority: data.priority,
+        estimatedTime: data.estimated_time,
+        completed: data.completed,
+        notes: data.notes
+      };
+      
+      setActions(prev => [...prev, newAction]);
+      toast.success('Ação criada com sucesso!');
+      return newAction;
+    } catch (error) {
+      console.error('Error adding action:', error);
+      toast.error('Erro ao criar ação');
+    }
+  };
+
+  const updateAction = async (id: string, updates: Partial<Action>) => {
+    if (!user) return;
+    
+    try {
+      const updateData: any = {};
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.weekNumber) updateData.week_number = updates.weekNumber;
+      if (updates.priority) updateData.priority = updates.priority;
+      if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (typeof updates.completed === 'boolean') {
+        updateData.completed = updates.completed;
+        updateData.completed_at = updates.completed ? new Date().toISOString() : null;
+      }
+
+      const { error } = await supabase
+        .from('actions')
+        .update(updateData)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setActions(prev => prev.map(action => 
+        action.id === id ? { ...action, ...updates } : action
+      ));
+      
+      if (typeof updates.completed === 'boolean') {
+        toast.success(updates.completed ? 'Ação marcada como concluída!' : 'Ação desmarcada!');
+      } else {
+        toast.success('Ação atualizada!');
+      }
+    } catch (error) {
+      console.error('Error updating action:', error);
+      toast.error('Erro ao atualizar ação');
+    }
+  };
+
+  const deleteAction = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('actions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setActions(prev => prev.filter(action => action.id !== id));
+      toast.success('Ação removida!');
+    } catch (error) {
+      console.error('Error deleting action:', error);
+      toast.error('Erro ao remover ação');
+    }
+  };
+
+  return { actions, loading, addAction, updateAction, deleteAction, refetch: fetchActions };
+};
+
+// Weekly Reviews hooks
+export const useWeeklyReviews = (cycleId?: string) => {
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState<WeeklyReview[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReviews = async () => {
+    if (!user || !cycleId) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('weekly_reviews')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('cycle_id', cycleId)
+        .order('week_number', { ascending: false });
+
+      if (error) throw error;
+      
+      const mappedReviews: WeeklyReview[] = data.map(item => ({
+        id: item.id,
+        weekNumber: item.week_number,
+        cycleId: item.cycle_id,
+        completionRate: item.completion_rate,
+        obstacles: item.obstacles,
+        adjustments: item.adjustments,
+        learnings: item.learnings,
+        createdAt: new Date(item.created_at)
+      }));
+      
+      setReviews(mappedReviews);
+    } catch (error) {
+      console.error('Error fetching weekly reviews:', error);
+      toast.error('Erro ao carregar revisões semanais');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, [user, cycleId]);
+
+  const addReview = async (review: Omit<WeeklyReview, 'id' | 'createdAt'>) => {
+    if (!user || !cycleId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('weekly_reviews')
+        .insert([{
+          user_id: user.id,
+          cycle_id: cycleId,
+          week_number: review.weekNumber,
+          completion_rate: review.completionRate,
+          obstacles: review.obstacles,
+          adjustments: review.adjustments,
+          learnings: review.learnings
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      const newReview: WeeklyReview = {
+        id: data.id,
+        weekNumber: data.week_number,
+        cycleId: data.cycle_id,
+        completionRate: data.completion_rate,
+        obstacles: data.obstacles,
+        adjustments: data.adjustments,
+        learnings: data.learnings,
+        createdAt: new Date(data.created_at)
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
+      toast.success('Revisão semanal criada com sucesso!');
+      return newReview;
+    } catch (error) {
+      console.error('Error adding weekly review:', error);
+      toast.error('Erro ao criar revisão semanal');
+    }
+  };
+
+  return { reviews, loading, addReview, refetch: fetchReviews };
 };

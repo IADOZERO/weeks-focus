@@ -4,31 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useCycles, useCurrentCycle } from "@/hooks/useLocalStorage";
+import { useCurrentCycle, useActions } from "@/hooks/useSupabaseData";
 import { Cycle, Action } from "@/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ExecutionPage() {
-  const [cycles, setCycles] = useCycles();
-  const [currentCycleId] = useCurrentCycle();
-  const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
+  const { currentCycle } = useCurrentCycle();
+  const { actions, updateAction } = useActions();
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weeklyScore, setWeeklyScore] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (currentCycleId && cycles.length > 0) {
-      const cycle = cycles.find((c: Cycle) => c.id === currentCycleId);
-      setCurrentCycle(cycle || null);
-      
-      if (cycle) {
-        const week = getCurrentWeek(cycle.startDate);
-        setCurrentWeek(week);
-        calculateWeeklyScore(cycle, week);
-      }
+    if (currentCycle) {
+      const week = getCurrentWeek(currentCycle.startDate);
+      setCurrentWeek(week);
+      calculateWeeklyScore(currentCycle, week);
     }
-  }, [currentCycleId, cycles]);
+  }, [currentCycle]);
 
   const getCurrentWeek = (startDate: Date): number => {
     const now = new Date();
@@ -46,33 +40,12 @@ export default function ExecutionPage() {
     setWeeklyScore(score);
   };
 
-  const handleActionToggle = (actionId: string, completed: boolean) => {
-    if (!currentCycle) return;
-
-    const updatedCycle = {
-      ...currentCycle,
-      objectives: currentCycle.objectives.map(obj => ({
-        ...obj,
-        actions: obj.actions.map(action => 
-          action.id === actionId 
-            ? { ...action, completed, completedAt: completed ? new Date() : undefined }
-            : action
-        )
-      }))
-    };
-
-    const updatedCycles = cycles.map((c: Cycle) => 
-      c.id === currentCycle.id ? updatedCycle : c
-    );
-
-    setCycles(updatedCycles);
-    setCurrentCycle(updatedCycle);
-    calculateWeeklyScore(updatedCycle, currentWeek);
-
-    toast({
-      title: completed ? "Ação concluída!" : "Ação desmarcada",
-      description: completed ? "Parabéns pelo progresso!" : "Ação marcada como pendente"
-    });
+  const handleActionToggle = async (actionId: string, completed: boolean) => {
+    await updateAction(actionId, { completed });
+    
+    if (currentCycle) {
+      calculateWeeklyScore(currentCycle, currentWeek);
+    }
   };
 
   const getPriorityColor = (priority: Action['priority']) => {
@@ -110,9 +83,7 @@ export default function ExecutionPage() {
     );
   }
 
-  const weekActions = currentCycle.objectives.flatMap(obj => 
-    obj.actions.filter(action => action.weekNumber === currentWeek)
-  );
+  const weekActions = actions.filter(action => action.weekNumber === currentWeek);
 
   const completedActions = weekActions.filter(action => action.completed);
   const pendingActions = weekActions.filter(action => !action.completed);

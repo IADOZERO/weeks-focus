@@ -4,62 +4,48 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useVisions } from "@/hooks/useLocalStorage";
+import { useVisions } from "@/hooks/useSupabaseData";
 import { Vision } from "@/types";
 import { Eye, Plus, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VisionPage() {
-  const [visions, setVisions] = useVisions();
+  const { visions, loading, addVision, updateVision, deleteVision } = useVisions();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Omit<Vision, 'id' | 'createdAt'>>({
+    title: '',
+    description: '',
+    category: 'personal',
+    timeframe: '2-years'
+  });
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "professional" as Vision['category'],
-    timeframe: "3-years" as Vision['timeframe']
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.description.trim()) {
       toast({
-        title: "Erro",
-        description: "Título e descrição são obrigatórios",
-        variant: "destructive"
+        title: "Erro de Validação",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
       });
       return;
     }
 
-    const newVision: Vision = {
-      id: editingId || crypto.randomUUID(),
-      ...formData,
-      createdAt: new Date()
-    };
-
     if (editingId) {
-      setVisions(visions.map((v: Vision) => v.id === editingId ? newVision : v));
+      await updateVision(editingId, formData);
       setEditingId(null);
-      toast({
-        title: "Sucesso",
-        description: "Visão atualizada com sucesso"
-      });
     } else {
-      setVisions([...visions, newVision]);
-      toast({
-        title: "Sucesso", 
-        description: "Visão criada com sucesso"
-      });
+      await addVision(formData);
     }
 
+    // Reset form
     setFormData({
-      title: "",
-      description: "",
-      category: "professional",
-      timeframe: "3-years"
+      title: '',
+      description: '',
+      category: 'personal',
+      timeframe: '2-years'
     });
     setIsCreating(false);
   };
@@ -75,12 +61,8 @@ export default function VisionPage() {
     setIsCreating(true);
   };
 
-  const handleDelete = (id: string) => {
-    setVisions(visions.filter((v: Vision) => v.id !== id));
-    toast({
-      title: "Sucesso",
-      description: "Visão removida com sucesso"
-    });
+  const handleDelete = async (id: string) => {
+    await deleteVision(id);
   };
 
   const getCategoryLabel = (category: Vision['category']) => {

@@ -5,23 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Target, AlertTriangle } from "lucide-react";
 import { ObjectiveCard } from "@/components/ObjectiveCard";
 import { ObjectiveForm } from "@/components/ObjectiveForm";
-import { useCycles, useCurrentCycle, useVisions } from "@/hooks/useLocalStorage";
+import { useCurrentCycle, useVisions, useObjectives } from "@/hooks/useSupabaseData";
 import { Objective } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ObjectivesPage() {
-  const [visions] = useVisions();
-  const [cycles, setCycles] = useCycles();
-  const [currentCycleId] = useCurrentCycle();
+  const { visions } = useVisions();
+  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { objectives, addObjective, updateObjective, deleteObjective } = useObjectives(currentCycleId || undefined);
   const [showObjectiveForm, setShowObjectiveForm] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | undefined>();
   const { toast } = useToast();
 
-  const currentCycle = cycles.find(cycle => cycle.id === currentCycleId);
-  const objectives = currentCycle?.objectives || [];
-
-  const handleCreateObjective = (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
+  const handleCreateObjective = async (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
     if (!currentCycle) {
       toast({
         title: "Erro",
@@ -40,81 +37,25 @@ export default function ObjectivesPage() {
       return;
     }
 
-    const newObjective: Objective = {
-      ...objectiveData,
-      id: uuidv4(),
-      actions: [],
-    };
-
-    const updatedCycles = cycles.map(cycle =>
-      cycle.id === currentCycleId
-        ? { ...cycle, objectives: [...cycle.objectives, newObjective] }
-        : cycle
-    );
-
-    setCycles(updatedCycles);
-    toast({
-      title: "Sucesso",
-      description: "Objetivo criado com sucesso!",
-    });
+    await addObjective(objectiveData);
   };
 
-  const handleEditObjective = (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
+  const handleEditObjective = async (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
     if (!editingObjective) return;
 
-    const updatedCycles = cycles.map(cycle =>
-      cycle.id === currentCycleId
-        ? {
-            ...cycle,
-            objectives: cycle.objectives.map(obj =>
-              obj.id === editingObjective.id
-                ? { ...obj, ...objectiveData }
-                : obj
-            )
-          }
-        : cycle
-    );
-
-    setCycles(updatedCycles);
+    await updateObjective(editingObjective.id, objectiveData);
     setEditingObjective(undefined);
-    toast({
-      title: "Sucesso",
-      description: "Objetivo atualizado com sucesso!",
-    });
   };
 
-  const handleToggleObjective = (objectiveId: string) => {
-    const updatedCycles = cycles.map(cycle =>
-      cycle.id === currentCycleId
-        ? {
-            ...cycle,
-            objectives: cycle.objectives.map(obj =>
-              obj.id === objectiveId
-                ? { ...obj, completed: !obj.completed }
-                : obj
-            )
-          }
-        : cycle
-    );
+  const handleToggleObjective = async (objectiveId: string) => {
+    const objective = objectives.find(obj => obj.id === objectiveId);
+    if (!objective) return;
 
-    setCycles(updatedCycles);
+    await updateObjective(objectiveId, { completed: !objective.completed });
   };
 
-  const handleDeleteObjective = (objectiveId: string) => {
-    const updatedCycles = cycles.map(cycle =>
-      cycle.id === currentCycleId
-        ? {
-            ...cycle,
-            objectives: cycle.objectives.filter(obj => obj.id !== objectiveId)
-          }
-        : cycle
-    );
-
-    setCycles(updatedCycles);
-    toast({
-      title: "Sucesso",
-      description: "Objetivo removido com sucesso!",
-    });
+  const handleDeleteObjective = async (objectiveId: string) => {
+    await deleteObjective(objectiveId);
   };
 
   if (!currentCycle) {
