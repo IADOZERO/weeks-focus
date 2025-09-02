@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Target, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 import { useCurrentCycle } from "@/hooks/useSupabaseData";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function Dashboard() {
   const { currentCycle, loading } = useCurrentCycle();
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [overallProgress, setOverallProgress] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentCycle) {
@@ -79,10 +81,17 @@ export function Dashboard() {
               Comece criando sua visão de longo prazo e depois inicie seu primeiro ciclo de 12 semanas.
             </p>
             <div className="flex gap-2 justify-center">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/vision')}
+              >
                 Criar Visão
               </Button>
-              <Button size="sm">
+              <Button 
+                size="sm"
+                onClick={() => navigate('/planning')}
+              >
                 Iniciar Ciclo
               </Button>
             </div>
@@ -174,13 +183,25 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/execution')}
+            >
               Ver Ações da Semana
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/planning')}
+            >
               Adicionar Ação
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/reviews')}
+            >
               Revisão Semanal
             </Button>
           </div>
