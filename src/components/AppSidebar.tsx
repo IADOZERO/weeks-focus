@@ -1,4 +1,4 @@
-import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings, BookOpen, LogOut, User } from "lucide-react";
+import { Calendar, Target, BarChart3, CheckCircle, Eye, Settings, BookOpen, LogOut, User, HelpCircle } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -14,6 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useGuide } from "@/components/guide/GuideProvider";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
@@ -28,6 +29,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { setIsOpen: openGuide, progress } = useGuide();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -60,6 +62,21 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {/* Guide Access */}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => openGuide(true)} className="hover:bg-sidebar-accent/50 text-sidebar-foreground">
+                  <HelpCircle className="h-4 w-4 shrink-0" />
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Guia Interativo</span>
+                      {!progress.isComplete && (
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                      )}
+                    </div>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

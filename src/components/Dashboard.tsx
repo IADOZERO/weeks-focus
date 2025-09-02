@@ -6,12 +6,14 @@ import { Target, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 import { useCurrentCycle } from "@/hooks/useSupabaseData";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGuide } from "@/components/guide/GuideProvider";
 
 export function Dashboard() {
   const { currentCycle, loading } = useCurrentCycle();
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [overallProgress, setOverallProgress] = useState(0);
   const navigate = useNavigate();
+  const { setIsOpen: openGuide, progress } = useGuide();
 
   useEffect(() => {
     if (currentCycle) {
@@ -75,6 +77,22 @@ export function Dashboard() {
         
         <Card className="bg-card border-border">
           <CardContent className="p-8 text-center">
+            {!progress.isComplete && (
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 mb-6">
+                <h4 className="font-medium text-primary mb-2">🎯 Novo na metodologia?</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Aprenda em 30 minutos como aplicar o 12 Week Year com nosso guia interativo
+                </p>
+                <Button 
+                  onClick={() => openGuide(true)}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Target className="h-4 w-4" />
+                  Começar Guia Interativo
+                </Button>
+              </div>
+            )}
             <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Nenhum ciclo ativo</h3>
             <p className="text-muted-foreground mb-4">

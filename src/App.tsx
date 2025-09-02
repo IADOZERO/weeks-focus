@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GuideProvider } from "@/components/guide/GuideProvider";
+import { GuideModal } from "@/components/guide/GuideModal";
 import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import VisionPage from "./pages/VisionPage";
@@ -20,10 +22,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <GuideProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <GuideModal />
+          <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={
@@ -73,6 +77,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </GuideProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
