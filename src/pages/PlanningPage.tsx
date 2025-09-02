@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Target, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Calendar, Target, CheckCircle, AlertTriangle, Pencil } from "lucide-react";
 import { ActionCard } from "@/components/ActionCard";
 import { ActionForm } from "@/components/ActionForm";
 import { CycleForm } from "@/components/CycleForm";
@@ -14,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function PlanningPage() {
   const { cycles, addCycle, updateCycle } = useCycles();
-  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { currentCycle, currentCycleId, setCurrentCycleId } = useCurrentCycle();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
   const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
@@ -141,13 +148,25 @@ export default function PlanningPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            size="icon"
             onClick={() => {
               setEditingCycle(currentCycle);
               setShowCycleForm(true);
             }}
             className="gap-2"
           >
-            Editar Ciclo
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">Editar Ciclo</span>
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingCycle(undefined);
+              setShowCycleForm(true);
+            }}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Ciclo
           </Button>
           <Button 
             onClick={() => {
@@ -172,9 +191,18 @@ export default function PlanningPage() {
 
       <div className="grid gap-4">
         <div className="flex items-center gap-4">
-          <Badge variant="outline" className="text-foreground">
-            Ciclo: {currentCycle.name}
-          </Badge>
+        <Select value={currentCycleId || ''} onValueChange={(value) => setCurrentCycleId(value)}>
+            <SelectTrigger className="w-auto min-w-[250px] max-w-full text-lg font-semibold">
+              <SelectValue placeholder="Selecione um ciclo" />
+            </SelectTrigger>
+            <SelectContent>
+              {cycles.map(cycle => (
+                <SelectItem key={cycle.id} value={cycle.id}>
+                  {cycle.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Badge variant="outline" className="text-foreground">
             Semana Atual: {currentWeekNumber}/12
           </Badge>
