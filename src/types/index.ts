@@ -38,6 +38,7 @@ export interface Action {
   completed: boolean;
   completedAt?: Date;
   notes?: string;
+  objectiveId: string;
 }
 
 export interface WeeklyReview {

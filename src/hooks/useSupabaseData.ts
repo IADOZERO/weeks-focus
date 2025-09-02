@@ -168,17 +168,18 @@ export const useCycles = () => {
           deadline: new Date(obj.deadline),
           visionId: obj.vision_id,
           completed: obj.completed,
-          actions: obj.actions?.map((action: any) => ({
-            id: action.id,
-            title: action.title,
-            description: action.description,
-            weekNumber: action.week_number,
-            priority: action.priority,
-            estimatedTime: action.estimated_time,
-            completed: action.completed,
-            completedAt: action.completed_at ? new Date(action.completed_at) : undefined,
-            notes: action.notes
-          })) || []
+        actions: obj.actions?.map((action: any) => ({
+          id: action.id,
+          title: action.title,
+          description: action.description,
+          weekNumber: action.week_number,
+          priority: action.priority,
+          estimatedTime: action.estimated_time,
+          completed: action.completed,
+          completedAt: action.completed_at ? new Date(action.completed_at) : undefined,
+          notes: action.notes,
+          objectiveId: obj.id
+        })) || []
         })) || [],
         weeklyReviews: item.weekly_reviews?.map((review: any) => ({
           id: review.id,
@@ -298,17 +299,18 @@ export const useObjectives = (cycleId?: string) => {
         visionId: item.vision_id,
         completed: item.completed,
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
-        actions: item.actions?.map((action: any) => ({
-          id: action.id,
-          title: action.title,
-          description: action.description,
-          weekNumber: action.week_number,
-          priority: action.priority,
-          estimatedTime: action.estimated_time,
-          completed: action.completed,
-          completedAt: action.completed_at ? new Date(action.completed_at) : undefined,
-          notes: action.notes
-        })) || []
+          actions: item.actions?.map((action: any) => ({
+            id: action.id,
+            title: action.title,
+            description: action.description,
+            weekNumber: action.week_number,
+            priority: action.priority,
+            estimatedTime: action.estimated_time,
+            completed: action.completed,
+            completedAt: action.completed_at ? new Date(action.completed_at) : undefined,
+            notes: action.notes,
+            objectiveId: item.id
+          })) || []
       }));
       
       setObjectives(mappedObjectives);
@@ -452,7 +454,8 @@ export const useActions = (objectiveId?: string) => {
         estimatedTime: item.estimated_time,
         completed: item.completed,
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
-        notes: item.notes
+        notes: item.notes,
+        objectiveId: item.objective_id
       }));
       
       setActions(mappedActions);
@@ -468,7 +471,7 @@ export const useActions = (objectiveId?: string) => {
     fetchActions();
   }, [user, objectiveId]);
 
-  const addAction = async (action: Omit<Action, 'id' | 'completedAt'>) => {
+  const addAction = async (action: Omit<Action, 'id' | 'completed' | 'completedAt'>) => {
     if (!user || !objectiveId) return;
     
     try {
@@ -476,13 +479,13 @@ export const useActions = (objectiveId?: string) => {
         .from('actions')
         .insert([{
           user_id: user.id,
-          objective_id: objectiveId,
+          objective_id: action.objectiveId,
           title: action.title,
           description: action.description,
           week_number: action.weekNumber,
           priority: action.priority,
           estimated_time: action.estimatedTime,
-          completed: action.completed || false,
+          completed: false,
           notes: action.notes
         }])
         .select()
@@ -498,7 +501,8 @@ export const useActions = (objectiveId?: string) => {
         priority: data.priority,
         estimatedTime: data.estimated_time,
         completed: data.completed,
-        notes: data.notes
+        notes: data.notes,
+        objectiveId: action.objectiveId
       };
       
       setActions(prev => [...prev, newAction]);

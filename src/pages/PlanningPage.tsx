@@ -15,11 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function PlanningPage() {
   const { cycles, addCycle } = useCycles();
   const { currentCycle, currentCycleId } = useCurrentCycle();
-  const { actions: allActions, addAction, updateAction, deleteAction } = useActions();
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
+  const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
   const [editingAction, setEditingAction] = useState<Action | undefined>();
-  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
   const { toast } = useToast();
 
   const currentWeekNumber = getCurrentWeekNumber(currentCycle);

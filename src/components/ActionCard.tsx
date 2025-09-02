@@ -9,6 +9,8 @@ interface ActionCardProps {
   onToggle: (id: string) => void;
   onEdit: (action: Action) => void;
   onDelete: (id: string) => void;
+  compact?: boolean;
+  showWeek?: boolean;
 }
 
 const priorityConfig = {
@@ -17,7 +19,7 @@ const priorityConfig = {
   low: { label: "Baixa", color: "bg-muted/20 text-muted-foreground", icon: Circle }
 };
 
-export function ActionCard({ action, onToggle, onEdit, onDelete }: ActionCardProps) {
+export function ActionCard({ action, onToggle, onEdit, onDelete, compact = false, showWeek = false }: ActionCardProps) {
   const priority = priorityConfig[action.priority];
   const PriorityIcon = priority.icon;
 

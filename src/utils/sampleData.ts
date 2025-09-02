@@ -31,7 +31,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           weekNumber: 1,
           priority: "high",
           estimatedTime: 4,
-          completed: false
+          completed: false,
+          objectiveId: "obj-1"
         },
         {
           id: "action-2", 
@@ -40,7 +41,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           weekNumber: 2,
           priority: "high",
           estimatedTime: 8,
-          completed: false
+          completed: false,
+          objectiveId: "obj-1"
         },
         {
           id: "action-3",
@@ -48,7 +50,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           weekNumber: 3,
           priority: "medium",
           estimatedTime: 6,
-          completed: false
+          completed: false,
+          objectiveId: "obj-1"
         }
       ]
     },
@@ -68,7 +71,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           priority: "medium",
           estimatedTime: 3,
           completed: true,
-          completedAt: new Date()
+          completedAt: new Date(),
+          objectiveId: "obj-2"
         },
         {
           id: "action-5",
@@ -76,7 +80,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           weekNumber: 2, 
           priority: "medium",
           estimatedTime: 3,
-          completed: false
+          completed: false,
+          objectiveId: "obj-2"
         }
       ]
     },
@@ -95,7 +100,8 @@ export const createSampleCycle = (visionId: string): Cycle => {
           weekNumber: 4,
           priority: "low",
           estimatedTime: 2,
-          completed: false
+          completed: false,
+          objectiveId: "obj-3"
         }
       ]
     }

@@ -13,9 +13,12 @@ interface ActionFormProps {
   onSubmit: (action: Omit<Action, 'id' | 'completed' | 'completedAt'>) => void;
   action?: Action;
   currentWeek?: number;
+  objectives: Array<{id: string, title: string}>;
+  selectedObjectiveId: string;
+  onObjectiveChange: (objectiveId: string) => void;
 }
 
-export function ActionForm({ open, onOpenChange, onSubmit, action, currentWeek = 1 }: ActionFormProps) {
+export function ActionForm({ open, onOpenChange, onSubmit, action, currentWeek = 1, objectives, selectedObjectiveId, onObjectiveChange }: ActionFormProps) {
   const [title, setTitle] = useState(action?.title || "");
   const [description, setDescription] = useState(action?.description || "");
   const [weekNumber, setWeekNumber] = useState(action?.weekNumber || currentWeek);
@@ -34,6 +37,7 @@ export function ActionForm({ open, onOpenChange, onSubmit, action, currentWeek =
       priority,
       estimatedTime: estimatedTime ? Number(estimatedTime) : undefined,
       notes: notes || undefined,
+      objectiveId: selectedObjectiveId,
     });
 
     // Reset form
@@ -75,6 +79,22 @@ export function ActionForm({ open, onOpenChange, onSubmit, action, currentWeek =
               placeholder="Detalhes adicionais sobre a ação..."
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Objetivo</Label>
+            <Select value={selectedObjectiveId} onValueChange={onObjectiveChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um objetivo" />
+              </SelectTrigger>
+              <SelectContent>
+                {objectives.map((objective) => (
+                  <SelectItem key={objective.id} value={objective.id}>
+                    {objective.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
