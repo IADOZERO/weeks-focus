@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Target, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { ValidationFeedback } from '../shared/ValidationFeedback';
-import { useCurrentCycle, useObjectives, useVisions, useCycles } from '@/hooks/useSupabaseData';
+import { useObjectives, useVisions, useCycles } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
 
@@ -29,8 +29,7 @@ export function ObjectivesStep({ onComplete }: ObjectivesStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { visions } = useVisions();
-  const { currentCycle } = useCurrentCycle();
-  const { cycles, addCycle } = useCycles();
+  const { currentCycle, cycles, addCycle } = useCycles();
   const { objectives: existingObjectives, addObjective } = useObjectives(currentCycle?.id);
   const { toast } = useToast();
 

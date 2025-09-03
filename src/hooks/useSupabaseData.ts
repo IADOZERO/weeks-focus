@@ -135,6 +135,7 @@ export const useCycles = () => {
   const { user } = useAuth();
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
 
   const fetchCycles = async () => {
     if (!user) return;
@@ -206,6 +207,14 @@ export const useCycles = () => {
     fetchCycles();
   }, [user]);
 
+  useEffect(() => {
+    if (cycles.length > 0) {
+      const activeCycle = cycles.find(c => c.status === 'active');
+      const currentId = activeCycle?.id || cycles[0]?.id || null;
+      setCurrentCycleId(currentId);
+    }
+  }, [cycles]);
+
   const addCycle = async (cycle: Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>) => {
     if (!user) return;
     
@@ -275,26 +284,9 @@ export const useCycles = () => {
     }
   };
 
-  return { cycles, loading, addCycle, updateCycle, refetch: fetchCycles };
-};
-
-// Current cycle hook
-export const useCurrentCycle = () => {
-  const { cycles, loading } = useCycles();
-  const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
-
-  // Get active cycle or most recent one
-  useEffect(() => {
-    if (cycles.length > 0) {
-      const activeCycle = cycles.find(c => c.status === 'active');
-      const currentId = activeCycle?.id || cycles[0]?.id || null;
-      setCurrentCycleId(currentId);
-    }
-  }, [cycles]);
-
   const currentCycle = cycles.find(c => c.id === currentCycleId) || null;
 
-  return { currentCycle, currentCycleId, setCurrentCycleId, loading };
+  return { cycles, currentCycle, currentCycleId, setCurrentCycleId, loading, addCycle, updateCycle, refetch: fetchCycles };
 };
 
 // Objectives hooks

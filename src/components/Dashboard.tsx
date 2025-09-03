@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Target, Calendar, TrendingUp, CheckCircle } from "lucide-react";
-import { useCurrentCycle } from "@/hooks/useSupabaseData";
+import { useCycles } from "@/hooks/useSupabaseData";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuide } from "@/components/guide/GuideProvider";
 import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export function Dashboard() {
-  const { currentCycle, loading } = useCurrentCycle();
+  const { currentCycle, loading } = useCycles();
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [overallProgress, setOverallProgress] = useState(0);
   const navigate = useNavigate();
