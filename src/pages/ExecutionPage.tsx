@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useCurrentCycle, useActions } from "@/hooks/useSupabaseData";
+import { useCurrentCycle, useCycles } from "@/hooks/useSupabaseData";
 import { Action } from "@/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ExecutionPage() {
   const { currentCycle } = useCurrentCycle();
+  const { refetch: refetchCycles } = useCycles();
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weeklyScore, setWeeklyScore] = useState(0);
   const { toast } = useToast();
@@ -51,15 +53,37 @@ export default function ExecutionPage() {
   };
 
   const handleActionToggle = async (actionId: string, completed: boolean) => {
-    // For now, we'll update the action locally since we'd need the useActions hook with the specific objective
-    // In a full implementation, we'd use the updateAction from the specific objective's useActions hook
-    toast({
-      title: completed ? "Ação concluída!" : "Ação desmarcada",
-      description: completed ? "Parabéns pelo progresso!" : "Ação marcada como pendente"
-    });
-    
-    if (currentCycle) {
-      calculateWeeklyScore(currentWeek);
+    try {
+      const updateData: any = { completed };
+      
+      // Set completed_at when marking as complete, or null when unchecking
+      if (completed) {
+        updateData.completed_at = new Date().toISOString();
+      } else {
+        updateData.completed_at = null;
+      }
+
+      const { error } = await supabase
+        .from('actions')
+        .update(updateData)
+        .eq('id', actionId);
+
+      if (error) throw error;
+
+      // Refresh the cycle data to get updated actions
+      refetchCycles();
+
+      toast({
+        title: completed ? "Ação concluída!" : "Ação desmarcada",
+        description: completed ? "Parabéns pelo progresso!" : "Ação marcada como pendente"
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar ação",
+        description: "Tente novamente em alguns instantes",
+        variant: "destructive"
+      });
     }
   };
 
