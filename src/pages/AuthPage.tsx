@@ -102,7 +102,7 @@ export default function AuthPage() {
           <div className="flex items-center justify-center">
             <Target className="h-12 w-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Week Yer</h1>
+          <h1 className="text-3xl font-bold text-foreground">Week Year</h1>
           <p className="text-muted-foreground">
             Seu sistema de produtividade de 12 semanas
           </p>
