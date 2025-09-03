@@ -15,6 +15,7 @@ export default function ExecutionPage() {
   const { refetch: refetchCycles } = useCycles();
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weeklyScore, setWeeklyScore] = useState(0);
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Get all actions for the current cycle
@@ -52,7 +53,18 @@ export default function ExecutionPage() {
     setWeeklyScore(score);
   };
 
+  // Sort actions by priority (high > medium > low)
+  const sortActionsByPriority = (actions: Action[]) => {
+    return actions.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
+  };
+
   const handleActionToggle = async (actionId: string, completed: boolean) => {
+    // Optimistic update for immediate UI feedback
+    setOptimisticUpdates(prev => ({ ...prev, [actionId]: completed }));
+    
     try {
       const updateData: any = { completed };
       
@@ -70,7 +82,13 @@ export default function ExecutionPage() {
 
       if (error) throw error;
 
-      // Refresh the cycle data to get updated actions
+      // Clear optimistic update and refresh data
+      setOptimisticUpdates(prev => {
+        const newUpdates = { ...prev };
+        delete newUpdates[actionId];
+        return newUpdates;
+      });
+      
       refetchCycles();
 
       toast({
@@ -79,6 +97,13 @@ export default function ExecutionPage() {
       });
       
     } catch (error) {
+      // Revert optimistic update on error
+      setOptimisticUpdates(prev => {
+        const newUpdates = { ...prev };
+        delete newUpdates[actionId];
+        return newUpdates;
+      });
+      
       toast({
         title: "Erro ao atualizar ação",
         description: "Tente novamente em alguns instantes",
@@ -122,8 +147,14 @@ export default function ExecutionPage() {
     );
   }
 
-  const completedActions = weekActions.filter(action => action.completed);
-  const pendingActions = weekActions.filter(action => !action.completed);
+  // Apply optimistic updates and sort by priority
+  const actionsWithOptimisticUpdates = weekActions.map(action => ({
+    ...action,
+    completed: optimisticUpdates.hasOwnProperty(action.id) ? optimisticUpdates[action.id] : action.completed
+  }));
+
+  const completedActions = sortActionsByPriority(actionsWithOptimisticUpdates.filter(action => action.completed));
+  const pendingActions = sortActionsByPriority(actionsWithOptimisticUpdates.filter(action => !action.completed));
 
   return (
     <div className="space-y-6">

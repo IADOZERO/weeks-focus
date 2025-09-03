@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,26 @@ export function ActionForm({ open, onOpenChange, onSubmit, action, currentWeek =
   const [priority, setPriority] = useState<Action['priority']>(action?.priority || "medium");
   const [estimatedTime, setEstimatedTime] = useState(action?.estimatedTime?.toString() || "");
   const [notes, setNotes] = useState(action?.notes || "");
+
+  // Sync form fields when action prop changes (for editing)
+  useEffect(() => {
+    if (action) {
+      setTitle(action.title);
+      setDescription(action.description || "");
+      setWeekNumber(action.weekNumber);
+      setPriority(action.priority);
+      setEstimatedTime(action.estimatedTime?.toString() || "");
+      setNotes(action.notes || "");
+    } else {
+      // Reset form for new action
+      setTitle("");
+      setDescription("");
+      setWeekNumber(currentWeek);
+      setPriority("medium");
+      setEstimatedTime("");
+      setNotes("");
+    }
+  }, [action, currentWeek]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
