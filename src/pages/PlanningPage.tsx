@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,9 @@ import { ActionForm } from "@/components/ActionForm";
 import { CycleForm } from "@/components/CycleForm";
 import { useCurrentCycle, useCycles, useActions } from "@/hooks/useSupabaseData";
 import { Cycle, Action } from "@/types";
-import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentWeek } from "@/utils/getCurrentWeek";
+import { useSearchParams } from "react-router-dom";
 
 export default function PlanningPage() {
   const { cycles, addCycle, updateCycle, refetch: refetchCycles } = useCycles();
@@ -23,6 +23,8 @@ export default function PlanningPage() {
   const [editingCycle, setEditingCycle] = useState<Cycle | undefined>();
   const [editingAction, setEditingAction] = useState<Action | undefined>();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const objectiveId = searchParams.get("objectiveId");
 
   const currentWeekNumber = getCurrentWeekNumber(currentCycle);
 
@@ -108,6 +110,20 @@ export default function PlanningPage() {
     );
     return sortActions(actions);
   }
+
+  useEffect(() => {
+    if (objectiveId) {
+      setSelectedObjectiveId(objectiveId);
+      const el = document.getElementById(`objective-${objectiveId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        el.classList.add("ring-2", "ring-primary");
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-primary");
+        }, 2000);
+      }
+    }
+  }, [objectiveId, currentCycle]);
 
   if (!currentCycle) {
     return (
@@ -197,7 +213,7 @@ export default function PlanningPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="current-week" className="space-y-4">
+      <Tabs defaultValue={objectiveId ? "by-objective" : "current-week"} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="current-week">Semana Atual</TabsTrigger>
           <TabsTrigger value="all-weeks">Todas as Semanas</TabsTrigger>
@@ -316,9 +332,13 @@ export default function PlanningPage() {
             currentCycle.objectives.map((objective) => {
               const objectiveActions = sortActions(objective.actions);
               const completedCount = objectiveActions.filter(a => a.completed).length;
-              
+
               return (
-                <Card key={objective.id} className="bg-card border-border">
+                <Card
+                  key={objective.id}
+                  id={`objective-${objective.id}`}
+                  className="bg-card border-border"
+                >
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

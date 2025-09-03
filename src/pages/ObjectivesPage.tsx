@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +8,6 @@ import { ObjectiveCard } from "@/components/ObjectiveCard";
 import { ObjectiveForm } from "@/components/ObjectiveForm";
 import { useCurrentCycle, useVisions, useObjectives } from "@/hooks/useSupabaseData";
 import { Objective } from "@/types";
-import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ObjectivesPage() {
@@ -17,6 +17,7 @@ export default function ObjectivesPage() {
   const [showObjectiveForm, setShowObjectiveForm] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | undefined>();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleCreateObjective = async (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
     if (!currentCycle) {
@@ -61,6 +62,10 @@ export default function ObjectivesPage() {
 
   const handleDeleteObjective = async (objectiveId: string) => {
     await deleteObjective(objectiveId);
+  };
+
+  const handleViewActions = (id: string) => {
+    navigate(`/planning?objectiveId=${id}`);
   };
 
   if (!currentCycle) {
@@ -141,6 +146,7 @@ export default function ObjectivesPage() {
                   setShowObjectiveForm(true);
                 }}
                 onDelete={handleDeleteObjective}
+                onViewActions={handleViewActions}
               />
             ))}
           </div>
