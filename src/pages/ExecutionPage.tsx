@@ -9,6 +9,7 @@ import { Action } from "@/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export default function ExecutionPage() {
   const { currentCycle } = useCurrentCycle();
@@ -18,12 +19,8 @@ export default function ExecutionPage() {
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  // Get all actions for the current cycle
-  const allObjectiveIds = currentCycle?.objectives.map(obj => obj.id) || [];
-  const allActions: Action[] = [];
-  
   // We would need to fetch actions for each objective, but for now let's use the cycle data
-  const weekActions = currentCycle?.objectives.flatMap(obj => 
+  const weekActions = currentCycle?.objectives.flatMap(obj =>
     obj.actions.filter(action => action.weekNumber === currentWeek)
   ) || [];
 
@@ -34,14 +31,6 @@ export default function ExecutionPage() {
       calculateWeeklyScore(week);
     }
   }, [currentCycle]);
-
-  const getCurrentWeek = (startDate: Date): number => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const diffTime = Math.abs(now.getTime() - start.getTime());
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-    return Math.min(diffWeeks, 12);
-  };
 
   const calculateWeeklyScore = (week: number) => {
     if (!currentCycle) return;

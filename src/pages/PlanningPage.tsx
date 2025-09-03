@@ -11,6 +11,7 @@ import { useCurrentCycle, useCycles, useActions } from "@/hooks/useSupabaseData"
 import { Cycle, Action } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export default function PlanningPage() {
   const { cycles, addCycle, updateCycle, refetch: refetchCycles } = useCycles();
@@ -85,17 +86,15 @@ export default function PlanningPage() {
 
   function getCurrentWeekNumber(cycle: Cycle | null): number {
     if (!cycle) return 1;
-    
-    const now = new Date();
-    const start = new Date(cycle.startDate);
-    const diffTime = Math.abs(now.getTime() - start.getTime());
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-    return Math.min(Math.max(diffWeeks, 1), 12);
+    return getCurrentWeek(cycle.startDate);
   }
 
-  // Sort actions by priority (high > medium > low)
-  const sortActionsByPriority = (actions: Action[]) => {
+  // Sort actions placing pending ones first, then by priority (high > medium > low)
+  const sortActions = (actions: Action[]) => {
     return actions.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -107,7 +106,7 @@ export default function PlanningPage() {
     const actions = currentCycle.objectives.flatMap(obj => 
       obj.actions.filter(action => action.weekNumber === week)
     );
-    return sortActionsByPriority(actions);
+    return sortActions(actions);
   }
 
   if (!currentCycle) {
@@ -281,7 +280,7 @@ export default function PlanningPage() {
                 </CardHeader>
                 {weekActions.length > 0 && (
                   <CardContent className="space-y-3">
-                 {sortActionsByPriority(weekActions).map((action) => (
+                 {sortActions(weekActions).map((action) => (
                        <ActionCard
                         key={action.id}
                         action={action}
@@ -315,7 +314,7 @@ export default function PlanningPage() {
             </Card>
           ) : (
             currentCycle.objectives.map((objective) => {
-              const objectiveActions = sortActionsByPriority(objective.actions);
+              const objectiveActions = sortActions(objective.actions);
               const completedCount = objectiveActions.filter(a => a.completed).length;
               
               return (
