@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PlanningPage() {
-  const { cycles, addCycle, updateCycle } = useCycles();
+  const { cycles, addCycle, updateCycle, refetch: refetchCycles } = useCycles();
   const { currentCycle, currentCycleId } = useCurrentCycle();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
   const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
@@ -59,6 +59,7 @@ export default function PlanningPage() {
     }
 
     await addAction(actionData);
+    refetchCycles();
   };
 
   const handleEditAction = async (actionData: Omit<Action, 'id' | 'completed' | 'completedAt'>) => {
@@ -66,6 +67,7 @@ export default function PlanningPage() {
 
     await updateAction(editingAction.id, actionData);
     setEditingAction(undefined);
+    refetchCycles();
   };
 
   const handleToggleAction = async (actionId: string) => {
@@ -73,10 +75,12 @@ export default function PlanningPage() {
     if (!action) return;
 
     await updateAction(actionId, { completed: !action.completed });
+    refetchCycles();
   };
 
   const handleDeleteAction = async (actionId: string) => {
     await deleteAction(actionId);
+    refetchCycles();
   };
 
   function getCurrentWeekNumber(cycle: Cycle | null): number {
