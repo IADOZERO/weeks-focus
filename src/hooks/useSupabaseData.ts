@@ -422,13 +422,20 @@ export const useObjectives = (cycleId?: string) => {
 
       if (error) throw error;
       
+      // Update local state immediately for better UX
       setObjectives(prev => prev.map(obj => 
         obj.id === id ? { ...obj, ...updates } : obj
       ));
+      
+      // Refetch to ensure data consistency
+      await fetchObjectives();
+      
       toast.success('Objetivo atualizado!');
     } catch (error) {
       console.error('Error updating objective:', error);
       toast.error('Erro ao atualizar objetivo');
+      // Refetch on error to restore correct state
+      await fetchObjectives();
     }
   };
 

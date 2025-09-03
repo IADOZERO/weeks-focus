@@ -43,8 +43,13 @@ export default function ObjectivesPage() {
   const handleEditObjective = async (objectiveData: Omit<Objective, 'id' | 'actions'>) => {
     if (!editingObjective) return;
 
-    await updateObjective(editingObjective.id, objectiveData);
-    setEditingObjective(undefined);
+    try {
+      await updateObjective(editingObjective.id, objectiveData);
+      setEditingObjective(undefined);
+    } catch (error) {
+      console.error('Error editing objective:', error);
+      // Keep the editing state if there's an error so user can retry
+    }
   };
 
   const handleToggleObjective = async (objectiveId: string) => {
