@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Target, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Calendar, Target, CheckCircle, AlertTriangle, Edit2 } from "lucide-react";
 import { ActionCard } from "@/components/ActionCard";
 import { ActionForm } from "@/components/ActionForm";
 import { CycleForm } from "@/components/CycleForm";
@@ -13,12 +13,13 @@ import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PlanningPage() {
-  const { cycles, addCycle } = useCycles();
+  const { cycles, addCycle, updateCycle } = useCycles();
   const { currentCycle, currentCycleId } = useCurrentCycle();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
   const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
+  const [editingCycle, setEditingCycle] = useState<Cycle | undefined>();
   const [editingAction, setEditingAction] = useState<Action | undefined>();
   const { toast } = useToast();
 
@@ -26,6 +27,12 @@ export default function PlanningPage() {
 
   const handleCreateCycle = async (cycleData: Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>) => {
     await addCycle(cycleData);
+  };
+
+  const handleUpdateCycle = async (cycleData: Omit<Cycle, 'id' | 'objectives' | 'weeklyReviews'>) => {
+    if (!editingCycle) return;
+    await updateCycle(editingCycle.id, cycleData);
+    setEditingCycle(undefined);
   };
 
   const handleCreateAction = async (actionData: Omit<Action, 'id' | 'completed' | 'completedAt'>) => {
@@ -156,9 +163,22 @@ export default function PlanningPage() {
 
       <div className="grid gap-4">
         <div className="flex items-center gap-4">
-          <Badge variant="outline" className="text-foreground">
-            Ciclo: {currentCycle.name}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-foreground">
+              Ciclo: {currentCycle.name}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditingCycle(currentCycle);
+                setShowCycleForm(true);
+              }}
+              className="h-6 w-6 p-0"
+            >
+              <Edit2 className="h-3 w-3" />
+            </Button>
+          </div>
           <Badge variant="outline" className="text-foreground">
             Semana Atual: {currentWeekNumber}/12
           </Badge>
@@ -344,8 +364,14 @@ export default function PlanningPage() {
 
       <CycleForm
         open={showCycleForm}
-        onOpenChange={setShowCycleForm}
-        onSubmit={handleCreateCycle}
+        onOpenChange={(open) => {
+          setShowCycleForm(open);
+          if (!open) {
+            setEditingCycle(undefined);
+          }
+        }}
+        onSubmit={editingCycle ? handleUpdateCycle : handleCreateCycle}
+        cycle={editingCycle}
       />
     </div>
   );

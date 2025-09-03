@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,22 @@ interface CycleFormProps {
 }
 
 export function CycleForm({ open, onOpenChange, onSubmit, cycle }: CycleFormProps) {
-  const [name, setName] = useState(cycle?.name || "");
-  const [startDate, setStartDate] = useState<Date | undefined>(cycle?.startDate);
-  const [status, setStatus] = useState<Cycle['status']>(cycle?.status || "planning");
+  const [name, setName] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [status, setStatus] = useState<Cycle['status']>("planning");
+
+  // Synchronize form states with cycle prop
+  useEffect(() => {
+    if (cycle) {
+      setName(cycle.name);
+      setStartDate(cycle.startDate);
+      setStatus(cycle.status);
+    } else {
+      setName("");
+      setStartDate(undefined);
+      setStatus("planning");
+    }
+  }, [cycle, open]);
 
   const endDate = startDate ? addWeeks(startDate, 12) : undefined;
 
