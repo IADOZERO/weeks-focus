@@ -93,9 +93,12 @@ export default function PlanningPage() {
     return Math.min(Math.max(diffWeeks, 1), 12);
   }
 
-  // Sort actions by priority (high > medium > low)
-  const sortActionsByPriority = (actions: Action[]) => {
+  // Sort actions placing pending ones first, then by priority (high > medium > low)
+  const sortActions = (actions: Action[]) => {
     return actions.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -107,7 +110,7 @@ export default function PlanningPage() {
     const actions = currentCycle.objectives.flatMap(obj => 
       obj.actions.filter(action => action.weekNumber === week)
     );
-    return sortActionsByPriority(actions);
+    return sortActions(actions);
   }
 
   if (!currentCycle) {
@@ -281,7 +284,7 @@ export default function PlanningPage() {
                 </CardHeader>
                 {weekActions.length > 0 && (
                   <CardContent className="space-y-3">
-                 {sortActionsByPriority(weekActions).map((action) => (
+                 {sortActions(weekActions).map((action) => (
                        <ActionCard
                         key={action.id}
                         action={action}
@@ -315,7 +318,7 @@ export default function PlanningPage() {
             </Card>
           ) : (
             currentCycle.objectives.map((objective) => {
-              const objectiveActions = sortActionsByPriority(objective.actions);
+              const objectiveActions = sortActions(objective.actions);
               const completedCount = objectiveActions.filter(a => a.completed).length;
               
               return (
