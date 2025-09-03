@@ -11,6 +11,7 @@ import { useCurrentCycle, useCycles, useActions } from "@/hooks/useSupabaseData"
 import { Cycle, Action } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export default function PlanningPage() {
   const { cycles, addCycle, updateCycle, refetch: refetchCycles } = useCycles();
@@ -85,12 +86,7 @@ export default function PlanningPage() {
 
   function getCurrentWeekNumber(cycle: Cycle | null): number {
     if (!cycle) return 1;
-    
-    const now = new Date();
-    const start = new Date(cycle.startDate);
-    const diffTime = Math.abs(now.getTime() - start.getTime());
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-    return Math.min(Math.max(diffWeeks, 1), 12);
+    return getCurrentWeek(cycle.startDate);
   }
 
   // Sort actions placing pending ones first, then by priority (high > medium > low)

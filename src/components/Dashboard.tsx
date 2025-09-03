@@ -7,6 +7,7 @@ import { useCurrentCycle } from "@/hooks/useSupabaseData";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuide } from "@/components/guide/GuideProvider";
+import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export function Dashboard() {
   const { currentCycle, loading } = useCurrentCycle();
@@ -31,14 +32,6 @@ export function Dashboard() {
       setOverallProgress(overallScore);
     }
   }, [currentCycle]);
-
-  const getCurrentWeek = (startDate: Date): number => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const diffTime = Math.abs(now.getTime() - start.getTime());
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-    return Math.min(diffWeeks, 12);
-  };
 
   const getWeeksRemaining = (endDate: Date): number => {
     const now = new Date();
