@@ -558,16 +558,19 @@ export const useActions = (objectiveId?: string) => {
     
     try {
       const updateData: any = {};
-      if (updates.title) updateData.title = updates.title;
+      if (updates.title !== undefined) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.weekNumber) updateData.week_number = updates.weekNumber;
-      if (updates.priority) updateData.priority = updates.priority;
+      if (updates.weekNumber !== undefined) updateData.week_number = updates.weekNumber;
+      if (updates.priority !== undefined) updateData.priority = updates.priority;
       if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.objectiveId !== undefined) updateData.objective_id = updates.objectiveId;
       if (typeof updates.completed === 'boolean') {
         updateData.completed = updates.completed;
         updateData.completed_at = updates.completed ? new Date().toISOString() : null;
       }
+
+      console.log('Updating action with data:', updateData);
 
       const { error } = await supabase
         .from('actions')
@@ -577,9 +580,13 @@ export const useActions = (objectiveId?: string) => {
 
       if (error) throw error;
       
+      // Update local state immediately for better UX
       setActions(prev => prev.map(action => 
         action.id === id ? { ...action, ...updates } : action
       ));
+      
+      // Refetch to ensure data consistency
+      await fetchActions();
       
       if (typeof updates.completed === 'boolean') {
         toast.success(updates.completed ? 'Ação marcada como concluída!' : 'Ação desmarcada!');
@@ -589,6 +596,8 @@ export const useActions = (objectiveId?: string) => {
     } catch (error) {
       console.error('Error updating action:', error);
       toast.error('Erro ao atualizar ação');
+      // Refetch on error to restore correct state
+      await fetchActions();
     }
   };
 
