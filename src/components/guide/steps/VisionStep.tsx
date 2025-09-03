@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Eye, CheckCircle, X, Lightbulb } from 'lucide-react';
 import { ValidationFeedback } from '../shared/ValidationFeedback';
+import { useVisions } from '@/hooks/useSupabaseData';
+import { useToast } from '@/hooks/use-toast';
 
 interface VisionStepProps {
   onComplete: () => void;
@@ -42,6 +44,19 @@ export function VisionStep({ onComplete }: VisionStepProps) {
   const [vision, setVision] = useState('');
   const [category, setCategory] = useState('');
   const [showExamples, setShowExamples] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { visions, addVision, loading } = useVisions();
+  const { toast } = useToast();
+
+  // Load existing vision if available
+  useEffect(() => {
+    if (visions.length > 0) {
+      const latestVision = visions[0]; // Get most recent vision
+      setVision(latestVision.description);
+      setCategory(latestVision.category);
+    }
+  }, [visions]);
 
   const validateVision = () => {
     if (!vision.trim()) return null;
@@ -68,11 +83,32 @@ export function VisionStep({ onComplete }: VisionStepProps) {
   const validation = validateVision();
   const canProceed = validation?.type === 'success' || (vision.trim().length > 0 && vision.trim().split(' ').length >= 15);
 
-  const handleComplete = () => {
-    if (canProceed) {
-      // Save vision to localStorage or context
-      localStorage.setItem('guide-vision', JSON.stringify({ vision, category }));
+  const handleComplete = async () => {
+    if (!canProceed || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await addVision({
+        title: `Visão - ${new Date().toLocaleDateString()}`,
+        description: vision,
+        category: category as any || 'personal',
+        timeframe: '3-years' as const
+      });
+      
+      toast({
+        title: "Visão salva com sucesso!",
+        description: "Sua visão foi criada e está disponível no projeto.",
+      });
+      
       onComplete();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar visão",
+        description: "Tente novamente.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -204,10 +240,10 @@ export function VisionStep({ onComplete }: VisionStepProps) {
         
         <Button 
           onClick={handleComplete}
-          disabled={!canProceed}
+          disabled={!canProceed || isSubmitting || loading}
           className="gap-2"
         >
-          Continuar <CheckCircle className="h-4 w-4" />
+          {isSubmitting ? 'Salvando...' : 'Continuar'} <CheckCircle className="h-4 w-4" />
         </Button>
       </div>
     </div>

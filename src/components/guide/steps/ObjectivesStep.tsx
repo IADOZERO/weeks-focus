@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Target, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { ValidationFeedback } from '../shared/ValidationFeedback';
+import { useCurrentCycle, useObjectives, useVisions, useCycles } from '@/hooks/useSupabaseData';
+import { useToast } from '@/hooks/use-toast';
+import { addDays } from 'date-fns';
 
 interface ObjectivesStepProps {
   onComplete: () => void;
@@ -23,6 +26,31 @@ export function ObjectivesStep({ onComplete }: ObjectivesStepProps) {
     { title: '', description: '', measurable: '' },
     { title: '', description: '', measurable: '' }
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { visions } = useVisions();
+  const { currentCycle } = useCurrentCycle();
+  const { cycles, addCycle } = useCycles();
+  const { objectives: existingObjectives, addObjective } = useObjectives(currentCycle?.id);
+  const { toast } = useToast();
+
+  // Load existing objectives if available
+  useEffect(() => {
+    if (existingObjectives.length > 0) {
+      const formattedObjectives = existingObjectives.slice(0, 3).map(obj => ({
+        title: obj.title,
+        description: obj.description,
+        measurable: obj.measurable
+      }));
+      
+      // Pad with empty objectives if needed
+      while (formattedObjectives.length < 3) {
+        formattedObjectives.push({ title: '', description: '', measurable: '' });
+      }
+      
+      setObjectives(formattedObjectives);
+    }
+  }, [existingObjectives]);
 
   const validateObjective = (objective: Objective) => {
     if (!objective.title.trim()) return { type: 'error' as const, message: 'Título é obrigatório' };
@@ -47,10 +75,59 @@ export function ObjectivesStep({ onComplete }: ObjectivesStepProps) {
   const filledObjectives = objectives.filter(obj => obj.title.trim() && obj.measurable.trim());
   const canProceed = filledObjectives.length >= 2; // Pelo menos 2 objetivos
 
-  const handleComplete = () => {
-    if (canProceed) {
-      localStorage.setItem('guide-objectives', JSON.stringify(filledObjectives));
+  const handleComplete = async () => {
+    if (!canProceed || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Create or get current cycle
+      let cycleId = currentCycle?.id;
+      
+      if (!cycleId) {
+        const today = new Date();
+        const endDate = addDays(today, 84); // 12 weeks = 84 days
+        
+        const newCycle = await addCycle({
+          name: `Ciclo - ${today.toLocaleDateString()}`,
+          startDate: today,
+          endDate: endDate,
+          status: 'planning' as const
+        });
+        cycleId = newCycle.id;
+      }
+      
+      // Get latest vision for linking objectives
+      const latestVision = visions[0];
+      if (!latestVision) {
+        throw new Error('É necessário criar uma visão primeiro');
+      }
+      
+      // Save all filled objectives
+      for (const objective of filledObjectives) {
+        await addObjective({
+          title: objective.title,
+          description: objective.description,
+          measurable: objective.measurable,
+          deadline: addDays(new Date(), 84), // 12 weeks deadline
+          visionId: latestVision.id,
+          completed: false
+        });
+      }
+      
+      toast({
+        title: "Objetivos salvos com sucesso!",
+        description: `${filledObjectives.length} objetivos foram criados no seu ciclo.`,
+      });
+      
       onComplete();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar objetivos",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,10 +254,10 @@ export function ObjectivesStep({ onComplete }: ObjectivesStepProps) {
         
         <Button 
           onClick={handleComplete}
-          disabled={!canProceed}
+          disabled={!canProceed || isSubmitting}
           className="gap-2"
         >
-          Continuar <CheckCircle className="h-4 w-4" />
+          {isSubmitting ? 'Salvando...' : 'Continuar'} <CheckCircle className="h-4 w-4" />
         </Button>
       </div>
     </div>

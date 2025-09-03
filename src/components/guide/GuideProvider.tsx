@@ -122,6 +122,13 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
       ...step,
       completed: step.id === stepId ? true : step.completed
     })));
+
+    // If guide is complete, redirect to planning page
+    if (progress.completedSteps.length + 1 === steps.length) {
+      setTimeout(() => {
+        window.location.href = '/planning';
+      }, 2000);
+    }
   };
 
   const resetGuide = () => {
