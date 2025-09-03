@@ -11,20 +11,27 @@ interface ObjectiveCardProps {
   onToggle: (id: string) => void;
   onEdit: (objective: Objective) => void;
   onDelete: (id: string) => void;
+  onViewActions?: (id: string) => void;
 }
 
-export function ObjectiveCard({ objective, onToggle, onEdit, onDelete }: ObjectiveCardProps) {
+export function ObjectiveCard({ objective, onToggle, onEdit, onDelete, onViewActions }: ObjectiveCardProps) {
   const completedActions = objective.actions.filter(action => action.completed).length;
   const totalActions = objective.actions.length;
   const progressPercentage = totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
 
   return (
-    <Card className="bg-card border-border hover:border-accent transition-colors">
+    <Card
+      className="bg-card border-border hover:border-accent transition-colors"
+      onClick={() => onViewActions?.(objective.id)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
             <button
-              onClick={() => onToggle(objective.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle(objective.id);
+              }}
               className="mt-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               {objective.completed ? (
@@ -56,7 +63,10 @@ export function ObjectiveCard({ objective, onToggle, onEdit, onDelete }: Objecti
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onEdit(objective)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(objective);
+              }}
               className="h-8 w-8"
             >
               <Edit className="h-4 w-4" />
@@ -64,7 +74,10 @@ export function ObjectiveCard({ objective, onToggle, onEdit, onDelete }: Objecti
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(objective.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(objective.id);
+              }}
               className="h-8 w-8 text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
