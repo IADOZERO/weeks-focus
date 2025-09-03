@@ -564,6 +564,7 @@ export const useActions = (objectiveId?: string) => {
       if (updates.priority) updateData.priority = updates.priority;
       if (updates.estimatedTime !== undefined) updateData.estimated_time = updates.estimatedTime;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.objectiveId) updateData.objective_id = updates.objectiveId;
       if (typeof updates.completed === 'boolean') {
         updateData.completed = updates.completed;
         updateData.completed_at = updates.completed ? new Date().toISOString() : null;
