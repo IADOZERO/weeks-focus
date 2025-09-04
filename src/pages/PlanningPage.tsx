@@ -16,7 +16,7 @@ import { useSearchParams } from "react-router-dom";
 export default function PlanningPage() {
   const { cycles, addCycle, updateCycle, refetch: refetchCycles, currentCycle, currentCycleId } = useCycles();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
-  const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
+  const { addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
   const [editingCycle, setEditingCycle] = useState<Cycle | undefined>();
@@ -73,7 +73,9 @@ export default function PlanningPage() {
   };
 
   const handleToggleAction = async (actionId: string) => {
-    const action = allActions.find(a => a.id === actionId);
+    const action = currentCycle?.objectives
+      .flatMap(obj => obj.actions)
+      .find(a => a.id === actionId);
     if (!action) return;
 
     await updateAction(actionId, { completed: !action.completed });
