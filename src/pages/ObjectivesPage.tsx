@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Target, AlertTriangle } from "lucide-react";
 import { ObjectiveCard } from "@/components/ObjectiveCard";
 import { ObjectiveForm } from "@/components/ObjectiveForm";
-import { useCurrentCycle, useVisions, useObjectives } from "@/hooks/useSupabaseData";
+import { useVisions, useObjectives, useCycles } from "@/hooks/useSupabaseData";
 import { Objective } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ObjectivesPage() {
   const { visions } = useVisions();
-  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { currentCycle, currentCycleId } = useCycles();
   const { objectives, addObjective, updateObjective, deleteObjective } = useObjectives(currentCycleId || undefined);
   const [showObjectiveForm, setShowObjectiveForm] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | undefined>();

@@ -7,17 +7,16 @@ import { Plus, Calendar, Target, CheckCircle, AlertTriangle, Edit2 } from "lucid
 import { ActionCard } from "@/components/ActionCard";
 import { ActionForm } from "@/components/ActionForm";
 import { CycleForm } from "@/components/CycleForm";
-import { useCurrentCycle, useCycles, useActions } from "@/hooks/useSupabaseData";
+import { useCycles, useActions } from "@/hooks/useSupabaseData";
 import { Cycle, Action } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentWeek } from "@/utils/getCurrentWeek";
 import { useSearchParams } from "react-router-dom";
 
 export default function PlanningPage() {
-  const { cycles, addCycle, updateCycle, refetch: refetchCycles } = useCycles();
-  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { cycles, addCycle, updateCycle, refetch: refetchCycles, currentCycle, currentCycleId } = useCycles();
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>("");
-  const { actions: allActions, addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
+  const { addAction, updateAction, deleteAction } = useActions(selectedObjectiveId || undefined);
   const [showActionForm, setShowActionForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
   const [editingCycle, setEditingCycle] = useState<Cycle | undefined>();
@@ -62,7 +61,7 @@ export default function PlanningPage() {
     }
 
     await addAction(actionData);
-    refetchCycles();
+    await refetchCycles();
   };
 
   const handleEditAction = async (actionData: Omit<Action, 'id' | 'completed' | 'completedAt'>) => {
@@ -70,20 +69,22 @@ export default function PlanningPage() {
 
     await updateAction(editingAction.id, actionData);
     setEditingAction(undefined);
-    refetchCycles();
+    await refetchCycles();
   };
 
   const handleToggleAction = async (actionId: string) => {
-    const action = allActions.find(a => a.id === actionId);
+    const action = currentCycle?.objectives
+      .flatMap(obj => obj.actions)
+      .find(a => a.id === actionId);
     if (!action) return;
 
     await updateAction(actionId, { completed: !action.completed });
-    refetchCycles();
+    await refetchCycles();
   };
 
   const handleDeleteAction = async (actionId: string) => {
     await deleteAction(actionId);
-    refetchCycles();
+    await refetchCycles();
   };
 
   function getCurrentWeekNumber(cycle: Cycle | null): number {

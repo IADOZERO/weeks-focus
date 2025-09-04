@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Calendar, TrendingUp, BookOpen, AlertTriangle } from "lucide-react";
 import { WeeklyReviewForm } from "@/components/WeeklyReviewForm";
-import { useCurrentCycle, useCycles, useWeeklyReviews } from "@/hooks/useSupabaseData";
+import { useCycles, useWeeklyReviews } from "@/hooks/useSupabaseData";
 import { WeeklyReview } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function ReviewsPage() {
-  const { currentCycle, currentCycleId } = useCurrentCycle();
+  const { currentCycle, currentCycleId } = useCycles();
   const { reviews, addReview } = useWeeklyReviews(currentCycleId || undefined);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);

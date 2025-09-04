@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useCurrentCycle, useCycles } from "@/hooks/useSupabaseData";
+import { useCycles } from "@/hooks/useSupabaseData";
 import { Action } from "@/types";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,8 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentWeek } from "@/utils/getCurrentWeek";
 
 export default function ExecutionPage() {
-  const { currentCycle } = useCurrentCycle();
-  const { refetch: refetchCycles } = useCycles();
+  const { currentCycle, refetch: refetchCycles } = useCycles();
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weeklyScore, setWeeklyScore] = useState(0);
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, boolean>>({});
@@ -78,7 +77,7 @@ export default function ExecutionPage() {
         return newUpdates;
       });
       
-      refetchCycles();
+      await refetchCycles();
 
       toast({
         title: completed ? "Ação concluída!" : "Ação desmarcada",
